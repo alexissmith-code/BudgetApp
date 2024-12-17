@@ -18,6 +18,9 @@ implementation("androidx.work:work-runtime:2.10.0")
 
 ## Help
 May need to update compileSdk from 34 to 35 in build.gradle.kts if doesn't sync.
+```
+compileSdk = 35
+```
 ## Authors
 
 Alexis Smith
