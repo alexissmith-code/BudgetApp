@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">FinalProject</string>
+    <string name="add_expense">Add Expense</string>
+    <string name="add_paycheck">Add Paycheck</string>
+    <string name="expense_name">Expense Name</string>
+    <string name="expense_amount">Expense Amount</string>
+    <string name="update">UPDATE</string>
+    <string name="delete">DELETE</string>
+    <string name="paycheck_amount">Paycheck Amount</string>
+    <string name="add_paycheck_button">Add Paycheck</string>
+    <string name="_0_00">$0.00</string>
+    <string name="add_paycheck_date">Add Paycheck Date</string>
+    <string name="budget">BUDGET</string>
+    <string name="expense">EXPENSE</string>
+    <string name="expenses">EXPENSES</string>
+    <string name="total_expenses">TOTAL EXPENSES</string>
+</resources>
