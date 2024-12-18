@@ -1,0 +1,52 @@
+package com.example.finalproject
+
+import DatabaseHelper
+import android.content.ContentValues
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Button
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.textfield.TextInputLayout
+
+class AddExpense : AppCompatActivity() {
+
+    private lateinit var expenseName : TextInputLayout
+    private lateinit var expenseAmount : TextInputLayout
+    private lateinit var addExpense : Button
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_add_expense)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        expenseName = findViewById(R.id.expenseName)
+        expenseAmount = findViewById(R.id.expenseAmount)
+        addExpense = findViewById(R.id.addExpense)
+
+        addExpense.setOnClickListener {
+            val name = expenseName.editText?.text.toString()
+            val amount = expenseAmount.editText?.text.toString().toDouble()
+
+            val dbHelper = DatabaseHelper(this)
+            val db = dbHelper.writableDatabase
+            val contentValues = ContentValues().apply {
+                put("name", name)
+                put("amount", amount)
+            }
+            db.insert("expenses", null, contentValues)
+            db.close()
+            finish()
+
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+    }
+}
