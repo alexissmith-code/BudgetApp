@@ -1,0 +1,155 @@
+package com.example.finalproject
+
+import DatabaseHelper
+import android.content.Intent
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.os.Bundle
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.work.WorkManager
+
+class MainActivity : AppCompatActivity(), ExpensesAdapter.ExpensesAdapterListener {
+
+    private lateinit var budget: TextView
+    private lateinit var totalExpenses: TextView
+    private lateinit var expenses: RecyclerView
+
+    private lateinit var expenseDatabaseHelper: DatabaseHelper
+    private lateinit var sqLiteDatabase: SQLiteDatabase
+    private lateinit var cursor: Cursor
+    private lateinit var adapter: ExpensesAdapter
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_main)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        budget = findViewById(R.id.budget)
+        totalExpenses = findViewById(R.id.totalExpenses)
+        expenses = findViewById(R.id.expenses)
+
+        expenseDatabaseHelper = DatabaseHelper(applicationContext)
+        sqLiteDatabase = expenseDatabaseHelper.readableDatabase
+
+        expenses.layoutManager = LinearLayoutManager(applicationContext)
+        adapter = ExpensesAdapter(this)
+        expenses.adapter = adapter
+
+        loadExpenses()
+
+        val mainToolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(mainToolbar)
+
+        DelayedMessageWorker.messageLiveData.observe(this){ msg ->
+            totalExpenses.text = msg
+            val paycheckAmount = intent.getDoubleExtra("EXTRA_AMOUNT", 0.0)
+            updateBudget(paycheckAmount)
+        }
+    }
+
+        private fun loadExpenses() {
+            val cursor = sqLiteDatabase.query(
+                "expenses",
+                arrayOf("_id", "name", "amount"),
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+
+            Expenses.expense.clear()
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow("_id"))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                val amount = cursor.getDouble(cursor.getColumnIndexOrThrow("amount"))
+                Expenses.expense.add(Expenses(id, name, amount))
+            }
+
+            //Log.d("MainActivity", "Expenses: ${Expenses.expense.size}")
+            adapter.notifyDataSetChanged()
+            cursor.close()
+
+            val total = expenseDatabaseHelper.getTotalExpenses()
+            totalExpenses.text = "$${total}"
+
+            val paycheckAmount = intent.getDoubleExtra("EXTRA_AMOUNT", 0.0)
+            updateBudget(paycheckAmount)
+        }
+
+    private fun updateBudget(paycheckAmount: Double) {
+        val totalExpensesAmount = expenseDatabaseHelper.getTotalExpenses()
+        val remainingBudget = paycheckAmount - totalExpensesAmount
+        budget.text = "$${remainingBudget}"
+
+    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.addExpense -> {
+                val intent = Intent(this, AddExpense::class.java)
+                startActivity(intent)
+                true
+            }
+
+            R.id.addPaycheck -> {
+                val intent = Intent(this, PaycheckDetail::class.java)
+                startActivity(intent)
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+
+    override fun click(position: Int) {
+        val intent = Intent(applicationContext, ExpenseDetail::class.java)
+        intent.putExtra("POSITION", position)
+        intent.putExtra("EXPENSE_ID", Expenses.expense[position].id)
+        intent.putExtra("EXPENSE_NAME", Expenses.expense[position].name)
+        intent.putExtra("EXPENSE_AMOUNT", Expenses.expense[position].amount)
+        startActivity(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadExpenses()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cursor.close()
+        sqLiteDatabase.close()
+        WorkManager.getInstance(this).cancelAllWorkByTag("delayed message worker")
+    }
+}
+
+
+
+
+
+
+
+
