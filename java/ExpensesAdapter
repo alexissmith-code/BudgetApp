@@ -1,0 +1,55 @@
+package com.example.finalproject
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+
+class ExpensesAdapter(private val itemAdapterListener: ExpensesAdapterListener) :
+    RecyclerView.Adapter<ExpensesAdapter.ViewHolder>() {
+
+    interface ExpensesAdapterListener {
+        fun click(position: Int)
+    }
+
+    class ViewHolder(itemView: View, private val itemAdapterListener: ExpensesAdapterListener) :
+        RecyclerView.ViewHolder(itemView) {
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                itemAdapterListener.click(position)
+            }
+        }
+
+        private val nameText: TextView = itemView.findViewById(R.id.expenseName)
+        private val amountText: TextView = itemView.findViewById(R.id.expenseAmount)
+
+        fun update(item: Expenses) {
+            nameText.text = item.name
+            amountText.text = item.amount.toString()
+
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.expense_view_layout, parent, false)
+        return ViewHolder(view, itemAdapterListener)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = Expenses.expense[position]
+        holder.update(item)
+    }
+
+    override fun getItemCount(): Int {
+        return Expenses.expense.size
+    }
+}
+
+
+
+
+
+
+        
